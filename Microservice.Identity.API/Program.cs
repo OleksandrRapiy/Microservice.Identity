@@ -1,3 +1,4 @@
+using Microservice.Identity.Application.Extentions;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
@@ -11,9 +12,9 @@ namespace Microservice.Identity.API
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
-            CreateHostBuilder(args).Build().Run();
+           await CreateHostBuilder(args).Build().RunWithSeeder();
         }
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>

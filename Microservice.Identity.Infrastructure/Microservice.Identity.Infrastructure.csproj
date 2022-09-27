@@ -4,4 +4,9 @@
     <TargetFramework>net5.0</TargetFramework>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Microservice.Identity.Persistence\Microservice.Identity.Persistence.csproj" />
+    <ProjectReference Include="..\Microservice.Identity.Application\Microservice.Identity.Application.csproj" />
+  </ItemGroup>
+
 </Project>
