@@ -14,8 +14,8 @@ namespace Microservice.Identity.Application.Configurations
 
         private static class Clients
         {
-            public const string InternalClient = "internal-client";
-            public const string ExternalClient = "external-client";
+            public const string InternalClient = "internalClient";
+            public const string ExternalClient = "externalClient";
         }
 
         public static ICollection<string> DefaultAllowedScopes = new List<string>
@@ -34,7 +34,7 @@ namespace Microservice.Identity.Application.Configurations
             new ApiScope(Scopes.MicroserviceData, "Full access to microservice.data.api"),
          };
 
-        public static string InternalClientSecret = "internal-client-secret";
+        public static string InternalClientSecret = "internalClientSecret";
         public static Client InternalClient = new Client
         {
             ClientId = Clients.InternalClient,
@@ -42,7 +42,7 @@ namespace Microservice.Identity.Application.Configurations
             SlidingRefreshTokenLifetime = 1296000, //15 days
             RefreshTokenExpiration = TokenExpiration.Sliding,
             RefreshTokenUsage = TokenUsage.OneTimeOnly,
-            AllowedGrantTypes = GrantTypes.ClientCredentials,
+            AllowedGrantTypes = GrantTypes.ResourceOwnerPasswordAndClientCredentials,
             AccessTokenLifetime = 3600, // one hour
             UpdateAccessTokenClaimsOnRefresh = true,
             RequireConsent = false,

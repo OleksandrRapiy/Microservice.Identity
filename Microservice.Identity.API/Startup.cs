@@ -1,7 +1,9 @@
 using IdentityServer4.AccessTokenValidation;
+using Microservice.Identity.Application.AutoMapper;
 using Microservice.Identity.Application.Configurations;
 using Microservice.Identity.Application.Interfaces.Seeders;
 using Microservice.Identity.Domain.Entities;
+using Microservice.Identity.Infrastructure.Services;
 using Microservice.Identity.Persistence.Context;
 using Microservice.Identity.Persistence.Seeders;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -55,7 +57,7 @@ namespace Microservice.Identity.API
             {
                 options.Authority = "https://localhost:5001";
                 options.ApiSecret = IdentityServerConfigurations.InternalClientSecret;
-
+                
                 options.EnableCaching = true;
 
                 options.TokenRetriever = request =>
@@ -73,11 +75,19 @@ namespace Microservice.Identity.API
                 options.IssuerUri = new Uri("https://localhost:5001").Host;
             })
             .AddAspNetIdentity<UserEntity>()
+            .AddProfileService<ProfileService>()
             .AddInMemoryClients(IdentityServerConfigurations.GetClients)
             .AddInMemoryApiScopes(IdentityServerConfigurations.ApiScopes)
             ;
 
+
+            #region Services
+
             services.AddScoped<ISeeder, UserSeeder>();
+
+            services.AddAutoMapper(typeof(MappingProfile).Assembly);
+            
+            #endregion
 
             services.AddSwaggerGen(options =>
             {

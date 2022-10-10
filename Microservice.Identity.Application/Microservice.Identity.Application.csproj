@@ -1,13 +1,16 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net5.0</TargetFramework>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="IdentityModel" Version="5.2.0" />
-    <PackageReference Include="IdentityServer4" Version="4.1.2" />
-    <PackageReference Include="IdentityServer4.Storage" Version="4.1.2" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="IdentityModel" Version="5.2.0" />
+		<PackageReference Include="IdentityServer4" Version="4.1.2" />
+		<PackageReference Include="IdentityServer4.Storage" Version="4.1.2" />
+	</ItemGroup>
 
+	<ItemGroup>
+		<ProjectReference Include="..\Microservice.Identity.Domain\Microservice.Identity.Domain.csproj" />
+	</ItemGroup>
 </Project>
