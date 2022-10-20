@@ -33,7 +33,7 @@ namespace Microservice.Identity.API.Controllers
         }
 
         [HttpPost("register")]
-        public async Task<IActionResult> RegitsterAsync(CancellationToken cancellationToken)
+        public async Task<IActionResult> RegisterAsync(CancellationToken cancellationToken)
         {
             return Ok();
         }

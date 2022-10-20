@@ -36,7 +36,21 @@ namespace Microservice.Identity.API
         {
             services.AddControllers();
 
-            services.AddDbContext<ApplicationDbContext>(options => options.UseInMemoryDatabase("Microservice.Identity"));
+
+
+            #region DataBase
+
+            services.AddScoped<ISeeder, UserSeeder>();
+
+            var postgreSqlDbConnection = Configuration.GetSection("DbConnection").Value;
+            if (postgreSqlDbConnection is null) throw new ArgumentNullException(nameof(postgreSqlDbConnection));
+
+            services.AddDbContext<ApplicationDbContext>(config =>
+            {
+                config.UseNpgsql(postgreSqlDbConnection, options => options.EnableRetryOnFailure());
+            });
+
+            #endregion
 
             services.AddIdentity<UserEntity, RoleEntity>(options =>
             {
@@ -57,7 +71,7 @@ namespace Microservice.Identity.API
             {
                 options.Authority = "https://localhost:5001";
                 options.ApiSecret = IdentityServerConfigurations.InternalClientSecret;
-                
+
                 options.EnableCaching = true;
 
                 options.TokenRetriever = request =>
@@ -86,7 +100,7 @@ namespace Microservice.Identity.API
             services.AddScoped<ISeeder, UserSeeder>();
 
             services.AddAutoMapper(typeof(MappingProfile).Assembly);
-            
+
             #endregion
 
             services.AddSwaggerGen(options =>
