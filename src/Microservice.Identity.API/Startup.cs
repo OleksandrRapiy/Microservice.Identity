@@ -1,5 +1,11 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using IdentityServer4.AccessTokenValidation;
+using MediatR;
 using Microservice.Identity.Application.AutoMapper;
+using Microservice.Identity.Application.Commands;
 using Microservice.Identity.Application.Configurations;
 using Microservice.Identity.Application.Interfaces.Seeders;
 using Microservice.Identity.Domain.Entities;
@@ -15,11 +21,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Xml.Linq;
 
 namespace Microservice.Identity.API
 {
@@ -35,7 +36,6 @@ namespace Microservice.Identity.API
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddControllers();
 
             #region DataBase
 
@@ -51,11 +51,22 @@ namespace Microservice.Identity.API
 
             #endregion
 
+            services.AddControllers();
+
+            services.AddHttpClient("IdentityToken",
+                 httpClient => { httpClient.BaseAddress = new Uri($"https://localhost:5001/connect/token"); });
+
             services.AddIdentity<UserEntity, RoleEntity>(options =>
             {
                 options.User.RequireUniqueEmail = true;
-                options.SignIn.RequireConfirmedAccount = true;
-            }).AddRoles<RoleEntity>()
+                options.SignIn.RequireConfirmedAccount = false;
+                options.Password.RequireDigit = false;
+                options.Password.RequireNonAlphanumeric = false;
+                options.Password.RequireUppercase = false;
+                options.Password.RequireLowercase = false;
+
+            })
+            .AddRoles<RoleEntity>()
             .AddEntityFrameworkStores<ApplicationDbContext>()
             .AddUserManager<UserManager<UserEntity>>()
             .AddDefaultTokenProviders()
@@ -64,22 +75,25 @@ namespace Microservice.Identity.API
             {
                 options.DefaultScheme = IdentityServerAuthenticationDefaults.AuthenticationScheme;
                 options.DefaultAuthenticateScheme = IdentityServerAuthenticationDefaults.AuthenticationScheme;
-                options.DefaultChallengeScheme = IdentityServerAuthenticationDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
             })
             .AddIdentityServerAuthentication(options =>
             {
-                options.Authority = "https://localhost:5001";
+                options.Authority = "https://localhost:5001/";
+                options.ApiName = IdentityServerConfigurations.InternalClient.ClientName;
+
                 options.ApiSecret = IdentityServerConfigurations.InternalClientSecret;
 
                 options.EnableCaching = true;
-
                 options.TokenRetriever = request =>
                 {
                     request.Cookies.TryGetValue("access_token", out var cookiesToken);
                     if (request.Headers.TryGetValue("Authorization", out var headerToken))
                         headerToken = headerToken.ToString().Split(' ').Last();
 
-                    return cookiesToken ?? headerToken;
+                    var resp = cookiesToken ?? headerToken;
+
+                    return resp;
                 };
             })
             .Services
@@ -100,10 +114,12 @@ namespace Microservice.Identity.API
                                 .GetName().Name);
                         });
             })
+            .AddInMemoryApiResources(IdentityServerConfigurations.ApiResources)
             .AddInMemoryClients(IdentityServerConfigurations.GetClients)
-            .AddInMemoryApiScopes(IdentityServerConfigurations.ApiScopes)
-            ;
+            .AddInMemoryApiScopes(IdentityServerConfigurations.ApiScopes);
 
+            services.AddMediatR(typeof(CreateUserCommand).Assembly,
+                    typeof(CreateUserCommandHandler).Assembly);
 
             #region Services
 
@@ -112,6 +128,8 @@ namespace Microservice.Identity.API
             services.AddAutoMapper(typeof(MappingProfile).Assembly);
 
             #endregion
+
+            #region Swagger 
 
             services.AddSwaggerGen(options =>
             {
@@ -150,6 +168,8 @@ namespace Microservice.Identity.API
                     }
                 });
             });
+
+            #endregion
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -163,9 +183,9 @@ namespace Microservice.Identity.API
             }
 
             app.UseHttpsRedirection();
+            app.UseIdentityServer();
 
             app.UseRouting();
-            app.UseIdentityServer();
 
             app.UseAuthentication();
             app.UseAuthorization();

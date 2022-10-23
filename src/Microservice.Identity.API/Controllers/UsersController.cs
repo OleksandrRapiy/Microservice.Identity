@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Microservice.Identity.Application.Dtos;
 using Microservice.Identity.Domain.Entities;
+using Microservice.Identity.Domain.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -28,6 +29,7 @@ namespace Microservice.Identity.API.Controllers
         }
 
         [HttpGet]
+        //[Authorize(Roles = IdentityRoles.Admin)]
         public async Task<IActionResult> GetAllUsersAsync(CancellationToken cancellationToken)
         {
             var users = await _userManager.Users.ToListAsync(cancellationToken);
@@ -40,7 +42,8 @@ namespace Microservice.Identity.API.Controllers
 
 
         [HttpGet("{id:long:min(1)}")]
-        public async Task<IActionResult> GetUserByIdAsync([FromRoute]long id, CancellationToken cancellationToken)
+        //[Authorize(Roles = IdentityRoles.Admin)]
+        public async Task<IActionResult> GetUserByIdAsync([FromRoute] long id, CancellationToken cancellationToken)
         {
             var user = await _userManager.Users.FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
 

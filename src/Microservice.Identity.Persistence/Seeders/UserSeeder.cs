@@ -1,12 +1,12 @@
-﻿using Microservice.Identity.Application.Interfaces.Seeders;
+﻿using System;
+using System.Threading;
+using System.Threading.Tasks;
+using Microservice.Identity.Application.Interfaces.Seeders;
 using Microservice.Identity.Domain.Entities;
 using Microservice.Identity.Domain.Models;
 using Microservice.Identity.Persistence.Context;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Microservice.Identity.Persistence.Seeders
 {

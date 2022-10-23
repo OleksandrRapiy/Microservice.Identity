@@ -1,7 +1,7 @@
-﻿using IdentityModel;
+﻿using System.Collections.Generic;
+using IdentityModel;
 using IdentityServer4;
 using IdentityServer4.Models;
-using System.Collections.Generic;
 
 namespace Microservice.Identity.Application.Configurations
 {
@@ -10,6 +10,7 @@ namespace Microservice.Identity.Application.Configurations
         private static class Scopes
         {
             public const string MicroserviceData = "microservice.data.api";
+            public const string IdentityData = "microservice.identity.api";
         }
 
         private static class Clients
@@ -23,22 +24,63 @@ namespace Microservice.Identity.Application.Configurations
             IdentityServerConstants.StandardScopes.OpenId,
             IdentityServerConstants.StandardScopes.Profile,
             IdentityServerConstants.StandardScopes.Email,
-            IdentityServerConstants.StandardScopes.OfflineAccess,
-            Scopes.MicroserviceData,
+            Scopes.IdentityData,
         };
-
 
         public static IEnumerable<ApiScope> ApiScopes =>
          new List<ApiScope>
          {
-            new ApiScope(Scopes.MicroserviceData, "Full access to microservice.data.api"),
+            new ApiScope( Scopes.IdentityData, "Full access to microservice.identity.api"),
+            new ApiScope( Scopes.MicroserviceData, "Full access to microservice.data.api"),
+            new ApiScope( IdentityServerConstants.StandardScopes.OpenId, "Open Id"),
+            new ApiScope( IdentityServerConstants.StandardScopes.Profile, "Profile"),
+            new ApiScope( IdentityServerConstants.StandardScopes.Email, "Email")
          };
+
+        public static IEnumerable<ApiResource> ApiResources => new List<ApiResource>()
+        {
+            new ApiResource(Scopes.IdentityData, "Full access to microservice.identity.api")
+            {
+                Description = "Full access to microservice.identity.api",
+                Scopes = DefaultAllowedScopes,
+                ApiSecrets = new List<Secret> { new Secret("secret".Sha256(), "secret") },
+                UserClaims = new List<string> { JwtClaimTypes.Role, JwtClaimTypes.Email,  JwtClaimTypes.FamilyName, JwtClaimTypes.GivenName }
+            },
+            new ApiResource(Scopes.MicroserviceData, "Full access to microservice.data.api")
+            {
+                Description = "Full access to microservice.data.api",
+                Scopes = DefaultAllowedScopes,
+                ApiSecrets = new List<Secret> { new Secret("secret".Sha256(), "secret") },
+                UserClaims = new List<string> {  JwtClaimTypes.Role, JwtClaimTypes.Email,  JwtClaimTypes.FamilyName, JwtClaimTypes.GivenName }
+            }
+        };
 
         public static string InternalClientSecret = "internalClientSecret";
         public static Client InternalClient = new Client
         {
             ClientId = Clients.InternalClient,
             ClientName = Clients.InternalClient,
+            SlidingRefreshTokenLifetime = 1296000, //15 days
+            RefreshTokenExpiration = TokenExpiration.Sliding,
+            RefreshTokenUsage = TokenUsage.OneTimeOnly,
+            AllowedGrantTypes = GrantTypes.ResourceOwnerPassword,
+            AccessTokenLifetime = 3600, // one hour
+            UpdateAccessTokenClaimsOnRefresh = true,
+            RequireConsent = false,
+            AllowPlainTextPkce = false,
+            AllowOfflineAccess = true,
+            ClientSecrets =
+            {
+                new Secret(InternalClientSecret.ToSha256())
+            },
+            AllowedScopes = DefaultAllowedScopes
+        };
+
+        public static string ExternalClientSecret = "externalClientSecret";
+        public static Client ExternalClient = new Client
+        {
+            ClientId = Clients.ExternalClient,
+            ClientName = Clients.ExternalClient,
             SlidingRefreshTokenLifetime = 1296000, //15 days
             RefreshTokenExpiration = TokenExpiration.Sliding,
             RefreshTokenUsage = TokenUsage.OneTimeOnly,
@@ -50,16 +92,13 @@ namespace Microservice.Identity.Application.Configurations
             AllowOfflineAccess = true,
             ClientSecrets =
             {
-                new Secret(InternalClientSecret.ToSha256())
+                new Secret(ExternalClientSecret.ToSha256())
             },
             AllowedScopes =
             {
                 IdentityServerConstants.StandardScopes.OpenId,
                 IdentityServerConstants.StandardScopes.Profile,
                 IdentityServerConstants.StandardScopes.Email,
-                IdentityServerConstants.StandardScopes.OfflineAccess,
-                IdentityServerConstants.StandardScopes.Address,
-                IdentityServerConstants.StandardScopes.Phone,
                 Scopes.MicroserviceData,
             }
         };
@@ -67,7 +106,8 @@ namespace Microservice.Identity.Application.Configurations
         public static IEnumerable<Client> GetClients
             => new List<Client>
             {
-                InternalClient
+                InternalClient,
+                ExternalClient
             };
     }
 }
