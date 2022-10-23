@@ -18,6 +18,7 @@ using Microsoft.OpenApi.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Xml.Linq;
 
 namespace Microservice.Identity.API
@@ -31,12 +32,10 @@ namespace Microservice.Identity.API
 
         public IConfiguration Configuration { get; }
 
-        // This method gets called by the runtime. Use this method to add services to the container.
+
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
-
-
 
             #region DataBase
 
@@ -88,8 +87,19 @@ namespace Microservice.Identity.API
             {
                 options.IssuerUri = new Uri("https://localhost:5001").Host;
             })
+            .AddDeveloperSigningCredential()
             .AddAspNetIdentity<UserEntity>()
             .AddProfileService<ProfileService>()
+            .AddConfigurationStore(options =>
+            {
+                options.ConfigureDbContext = builder =>
+                    builder.UseNpgsql(postgreSqlDbConnection,
+                        sql =>
+                        {
+                            sql.MigrationsAssembly(typeof(ApplicationDbContext).GetTypeInfo().Assembly
+                                .GetName().Name);
+                        });
+            })
             .AddInMemoryClients(IdentityServerConfigurations.GetClients)
             .AddInMemoryApiScopes(IdentityServerConfigurations.ApiScopes)
             ;
