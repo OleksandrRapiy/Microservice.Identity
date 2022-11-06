@@ -21,10 +21,10 @@ namespace Microservice.Identity.Application.Configurations
 
         public static ICollection<string> DefaultAllowedScopes = new List<string>
         {
+            Scopes.IdentityData, 
             IdentityServerConstants.StandardScopes.OpenId,
             IdentityServerConstants.StandardScopes.Profile,
             IdentityServerConstants.StandardScopes.Email,
-            Scopes.IdentityData,
         };
 
         public static IEnumerable<ApiScope> ApiScopes =>
@@ -42,14 +42,27 @@ namespace Microservice.Identity.Application.Configurations
             new ApiResource(Scopes.IdentityData, "Full access to microservice.identity.api")
             {
                 Description = "Full access to microservice.identity.api",
-                Scopes = DefaultAllowedScopes,
+                Scopes =
+                {
+                    Scopes.IdentityData,
+                    IdentityServerConstants.StandardScopes.OpenId,
+                    IdentityServerConstants.StandardScopes.Profile,
+                    IdentityServerConstants.StandardScopes.Email,
+                },
                 ApiSecrets = new List<Secret> { new Secret("secret".Sha256(), "secret") },
                 UserClaims = new List<string> { JwtClaimTypes.Role, JwtClaimTypes.Email,  JwtClaimTypes.FamilyName, JwtClaimTypes.GivenName }
             },
             new ApiResource(Scopes.MicroserviceData, "Full access to microservice.data.api")
             {
                 Description = "Full access to microservice.data.api",
-                Scopes = DefaultAllowedScopes,
+                Scopes =
+                {
+                    Scopes.IdentityData,
+                    Scopes.MicroserviceData,
+                    IdentityServerConstants.StandardScopes.OpenId,
+                    IdentityServerConstants.StandardScopes.Profile,
+                    IdentityServerConstants.StandardScopes.Email,
+                },
                 ApiSecrets = new List<Secret> { new Secret("secret".Sha256(), "secret") },
                 UserClaims = new List<string> {  JwtClaimTypes.Role, JwtClaimTypes.Email,  JwtClaimTypes.FamilyName, JwtClaimTypes.GivenName }
             }
@@ -63,7 +76,7 @@ namespace Microservice.Identity.Application.Configurations
             SlidingRefreshTokenLifetime = 1296000, //15 days
             RefreshTokenExpiration = TokenExpiration.Sliding,
             RefreshTokenUsage = TokenUsage.OneTimeOnly,
-            AllowedGrantTypes = GrantTypes.ResourceOwnerPassword,
+            AllowedGrantTypes = GrantTypes.ResourceOwnerPasswordAndClientCredentials,
             AccessTokenLifetime = 3600, // one hour
             UpdateAccessTokenClaimsOnRefresh = true,
             RequireConsent = false,
