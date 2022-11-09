@@ -15,6 +15,7 @@ namespace Microservice.Identity.API.Controllers
 {
     [ApiController]
     [Route("api/users")]
+    [Authorize(Policy = "microservice.identity.api")]
     public class UsersController : ControllerBase
     {
         private readonly UserManager<UserEntity> _userManager;
@@ -29,7 +30,7 @@ namespace Microservice.Identity.API.Controllers
         }
 
         [HttpGet]
-        //[Authorize(Roles = IdentityRoles.Admin)]
+        [Authorize(Roles = IdentityRoles.Admin)]
         public async Task<IActionResult> GetAllUsersAsync(CancellationToken cancellationToken)
         {
             var users = await _userManager.Users.ToListAsync(cancellationToken);
@@ -42,7 +43,7 @@ namespace Microservice.Identity.API.Controllers
 
 
         [HttpGet("{id:long:min(1)}")]
-        //[Authorize(Roles = IdentityRoles.Admin)]
+        [Authorize(Roles = IdentityRoles.Admin)]
         public async Task<IActionResult> GetUserByIdAsync([FromRoute] long id, CancellationToken cancellationToken)
         {
             var user = await _userManager.Users.FirstOrDefaultAsync(x => x.Id == id, cancellationToken);

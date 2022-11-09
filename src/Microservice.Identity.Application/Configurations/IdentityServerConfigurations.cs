@@ -7,7 +7,7 @@ namespace Microservice.Identity.Application.Configurations
 {
     public static class IdentityServerConfigurations
     {
-        private static class Scopes
+        public static class Scopes
         {
             public const string MicroserviceData = "microservice.data.api";
             public const string IdentityData = "microservice.identity.api";
@@ -21,7 +21,7 @@ namespace Microservice.Identity.Application.Configurations
 
         public static ICollection<string> DefaultAllowedScopes = new List<string>
         {
-            Scopes.IdentityData, 
+            Scopes.IdentityData,
             IdentityServerConstants.StandardScopes.OpenId,
             IdentityServerConstants.StandardScopes.Profile,
             IdentityServerConstants.StandardScopes.Email,
@@ -57,7 +57,6 @@ namespace Microservice.Identity.Application.Configurations
                 Description = "Full access to microservice.data.api",
                 Scopes =
                 {
-                    Scopes.IdentityData,
                     Scopes.MicroserviceData,
                     IdentityServerConstants.StandardScopes.OpenId,
                     IdentityServerConstants.StandardScopes.Profile,
@@ -76,7 +75,7 @@ namespace Microservice.Identity.Application.Configurations
             SlidingRefreshTokenLifetime = 1296000, //15 days
             RefreshTokenExpiration = TokenExpiration.Sliding,
             RefreshTokenUsage = TokenUsage.OneTimeOnly,
-            AllowedGrantTypes = GrantTypes.ResourceOwnerPasswordAndClientCredentials,
+            AllowedGrantTypes = GrantTypes.ResourceOwnerPassword,
             AccessTokenLifetime = 3600, // one hour
             UpdateAccessTokenClaimsOnRefresh = true,
             RequireConsent = false,
@@ -97,7 +96,7 @@ namespace Microservice.Identity.Application.Configurations
             SlidingRefreshTokenLifetime = 1296000, //15 days
             RefreshTokenExpiration = TokenExpiration.Sliding,
             RefreshTokenUsage = TokenUsage.OneTimeOnly,
-            AllowedGrantTypes = GrantTypes.ResourceOwnerPasswordAndClientCredentials,
+            AllowedGrantTypes = GrantTypes.ResourceOwnerPassword,
             AccessTokenLifetime = 3600, // one hour
             UpdateAccessTokenClaimsOnRefresh = true,
             RequireConsent = false,

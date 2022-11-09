@@ -13,6 +13,7 @@ using Microservice.Identity.Infrastructure.Services;
 using Microservice.Identity.Persistence.Context;
 using Microservice.Identity.Persistence.Seeders;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
@@ -21,6 +22,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
+using static Microservice.Identity.Application.Configurations.IdentityServerConfigurations;
 
 namespace Microservice.Identity.API
 {
@@ -54,7 +56,7 @@ namespace Microservice.Identity.API
             services.AddControllers();
 
             services.AddHttpClient("IdentityToken",
-                 httpClient => { httpClient.BaseAddress = new Uri($"https://localhost:5001/connect/token"); });
+                 httpClient => { httpClient.BaseAddress = new Uri($"{Configuration["Identity:Authority"]}/connect/token"); });
 
             services.AddIdentity<UserEntity, RoleEntity>(options =>
             {
@@ -71,35 +73,9 @@ namespace Microservice.Identity.API
             .AddUserManager<UserManager<UserEntity>>()
             .AddDefaultTokenProviders()
             .Services
-            .AddAuthentication(options =>
-            {
-                options.DefaultScheme = IdentityServerAuthenticationDefaults.AuthenticationScheme;
-                options.DefaultAuthenticateScheme = IdentityServerAuthenticationDefaults.AuthenticationScheme;
-                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-            })
-            .AddIdentityServerAuthentication(options =>
-            {
-                options.Authority = "https://localhost:5001/";
-                options.ApiName = IdentityServerConfigurations.InternalClient.ClientName;
-
-                options.ApiSecret = IdentityServerConfigurations.InternalClientSecret;
-
-                options.EnableCaching = true;
-                options.TokenRetriever = request =>
-                {
-                    request.Cookies.TryGetValue("access_token", out var cookiesToken);
-                    if (request.Headers.TryGetValue("Authorization", out var headerToken))
-                        headerToken = headerToken.ToString().Split(' ').Last();
-
-                    var resp = cookiesToken ?? headerToken;
-
-                    return resp;
-                };
-            })
-            .Services
             .AddIdentityServer(options =>
             {
-                options.IssuerUri = new Uri("https://localhost:5001").Host;
+                options.IssuerUri = new Uri(Configuration["Identity:Authority"]).Host;
             })
             .AddDeveloperSigningCredential()
             .AddAspNetIdentity<UserEntity>()
@@ -114,9 +90,40 @@ namespace Microservice.Identity.API
                                 .GetName().Name);
                         });
             })
-            .AddInMemoryApiResources(IdentityServerConfigurations.ApiResources)
-            .AddInMemoryClients(IdentityServerConfigurations.GetClients)
-            .AddInMemoryApiScopes(IdentityServerConfigurations.ApiScopes);
+            .AddInMemoryApiResources(ApiResources)
+            .AddInMemoryClients(GetClients)
+            .AddInMemoryApiScopes(ApiScopes);
+
+
+            // Authorization 
+            services.AddAuthentication(options =>
+            {
+                options.DefaultScheme = IdentityServerAuthenticationDefaults.AuthenticationScheme;
+                options.DefaultAuthenticateScheme = IdentityServerAuthenticationDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+            .AddIdentityServerAuthentication(options =>
+            {
+                options.Authority = Configuration["Identity:Authority"];
+                options.ApiName = Configuration["Identity:ApiName"];
+
+                options.TokenRetriever = request =>
+                {
+                    request.Cookies.TryGetValue("access_token", out var cookiesToken);
+                    if (request.Headers.TryGetValue("Authorization", out var headerToken))
+                        headerToken = headerToken.ToString().Split(' ').Last();
+
+                    var resp = cookiesToken ?? headerToken;
+
+                    return resp;
+                };
+            });
+            // You create policy if token have required scope
+            services.AddAuthorization(options =>
+            {
+                options.AddPolicy("microservice.identity.api",
+                    policy => policy.RequireScope("microservice.identity.api"));
+            });
 
             services.AddMediatR(typeof(CreateUserCommand).Assembly,
                     typeof(CreateUserCommandHandler).Assembly);
@@ -189,6 +196,7 @@ namespace Microservice.Identity.API
 
             app.UseAuthentication();
             app.UseAuthorization();
+
 
             app.UseEndpoints(endpoints =>
             {

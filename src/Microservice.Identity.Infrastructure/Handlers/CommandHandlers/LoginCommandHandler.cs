@@ -1,8 +1,11 @@
 ﻿using System;
+using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using IdentityModel;
 using IdentityModel.Client;
+using IdentityServer4.EntityFramework.Entities;
 using MediatR;
 using Microservice.Identity.Application.Commands;
 using Microservice.Identity.Application.Configurations;
@@ -32,10 +35,13 @@ namespace Microservice.Identity.Infrastructure.Handlers.CommandHandlers
             if (await _signInManager.CheckPasswordSignInAsync(user, request.Password, true) != SignInResult.Success)
                 throw new Exception("Invalid credentials");
 
+            if (!IdentityServerConfigurations.GetClients.Any(x => x.ClientId == request.ClientId && x.ClientSecrets.Any(x => x.Value == request.ClientSecret.ToSha256())))
+                throw new Exception("Invalid client id or clinet secret");
+
             var tokenClient = new TokenClient(_httpClient, new TokenClientOptions()
             {
-                ClientId = IdentityServerConfigurations.InternalClient.ClientId,
-                ClientSecret = IdentityServerConfigurations.InternalClientSecret,
+                ClientId = request.ClientId,
+                ClientSecret = request.ClientSecret,
             });
 
             var token = await tokenClient.RequestPasswordTokenAsync(

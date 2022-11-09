@@ -7,10 +7,14 @@ namespace Microservice.Identity.Application.Commands
     public class LoginCommand : IRequest<TokenDto>
     {
         [Required]
-        //[EmailAddress(ErrorMessage = "Incorrect email address")]
         public string Username { get; set; }
+
         [Required(ErrorMessage = "Password should not be empty")]
         [DataType(DataType.Password)]
         public string Password { get; set; }
+
+        public string ClientId { get; set; }
+
+        public string ClientSecret { get; set; }
     }
 }
